@@ -1,50 +1,23 @@
 # Data Contract Guardian
 
-An AI agent that catches breaking data changes between two teams before
-they hit production — auto-fixing safe changes and escalating risky ones
-to a human.
+**An AI agent that catches breaking data changes between teams before they hit production — auto-fixing safe changes and escalating risky ones to a human.**
 
-## What's built so far (Steps 1-4)
+## The Problem
 
-- `contracts/user_contract.py` — the data contract (Pydantic schema) + validator
-- `agent.py` — Claude-powered reasoning agent that assesses risk and suggests fixes
+At any company where multiple teams share data, a schema change on one side (a renamed field, a changed data type) can silently break a downstream pipeline, dashboard, or ML model. These failures are usually caught hours or days later — by a human, after something has already gone wrong. This is a real, expensive, and common failure mode in production data systems.
 
-## Setup
+## What This Does
 
-```bash
-pip install -r requirements.txt
-export ANTHROPIC_API_KEY="your-key-here"
-```
+Data Contract Guardian sits between a data producer and a data consumer, like an automated contract reviewer:
 
-## Run it
+1. Detects when incoming data violates an agreed-upon schema/contract
+2. Uses an LLM (Claude) to reason about *how risky* the change is and what the right fix looks like
+3. **Auto-fixes** low-risk changes (e.g., safe field renames)
+4. **Escalates high-risk changes to a human** via Slack, with a clear explanation and suggested fix, instead of guessing
+5. Logs every decision for observability — how many changes were caught, auto-fixed vs. escalated, and response time
 
-```bash
-# Test the contract validator alone
-python3 contracts/user_contract.py
+## Why I Built This
 
-# Test the full agent (validator + Claude reasoning)
-python3 agent.py
-```
+At Tech Mahindra, I worked on production banking data pipelines (2TB+/day) where schema and data quality issues were a constant, costly risk — I built the validation and observability frameworks that caught these issues manually. This project automates and extends that experience with an AI reasoning layer, moving from "detect and alert a human" to "detect, reason, and act autonomously with guardrails."
 
-## What happens when you run agent.py
-
-1. A record with a broken `risk_score` field (string instead of float) is checked against the contract
-2. The contract validator catches the mismatch
-3. The violation is sent to Claude, which assesses risk level and suggests a fix
-4. You see the agent's full reasoning printed to the console
-
-## Next steps (not yet built)
-
-- [ ] Wrap the logic in LangGraph for a proper multi-step agent loop
-- [ ] Add Slack webhook alert for high-risk violations
-- [ ] Add GitHub Action to trigger on real PRs
-- [ ] Log every decision to SQLite for metrics
-- [ ] Build a simple Streamlit dashboard showing changes caught/auto-fixed
-
-## Agentic patterns demonstrated
-
-- **ReAct Planning** — observe (violation) → think (risk assessment) → act (fix or escalate)
-- **Multi-Tool Orchestration** — (coming next) checking downstream consumers, past incidents
-- **Human-in-the-Loop** — (coming next) Slack escalation for high-risk changes
-- **Event-Triggered Automation** — (coming next) GitHub Actions trigger
-- **Production Observability** — (coming next) SQLite logging + dashboard
+## Architecture
