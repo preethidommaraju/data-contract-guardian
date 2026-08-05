@@ -1,5 +1,7 @@
 # Data Contract Guardian
 
+![GitHub Actions running successfully](demo-github-actions-success.png)
+
 **An AI agent that catches breaking data changes between teams before they hit production — auto-fixing safe changes and escalating risky ones to a human.**
 
 ## The Problem
